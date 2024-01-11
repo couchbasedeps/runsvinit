@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+
+	reaper "github.com/ramr/go-reaper"
 )
 
 const etcService = "/etc/service"
@@ -56,7 +58,7 @@ func main() {
 	}
 
 	if *reap {
-		go reapLoop()
+		go reaper.Reap()
 	} else {
 		infof("warning: NOT reaping zombies")
 	}
@@ -74,35 +76,6 @@ func main() {
 		infof("%s exited with error: %v", runsvdir, err)
 	} else {
 		debugf("%s exited cleanly", runsvdir)
-	}
-}
-
-// From https://github.com/ramr/go-reaper/blob/master/reaper.go
-func reapLoop() {
-	c := make(chan os.Signal)
-	signal.Notify(c, syscall.SIGCHLD)
-	for range c {
-		reapChildren()
-	}
-}
-
-func reapChildren() {
-	for {
-		var (
-			ws  syscall.WaitStatus
-			pid int
-			err error
-		)
-		for {
-			pid, err = syscall.Wait4(-1, &ws, 0, nil)
-			if err != syscall.EINTR {
-				break
-			}
-		}
-		if err == syscall.ECHILD {
-			return // done
-		}
-		infof("reaped child process %d (%+v)", pid, ws)
 	}
 }
 
