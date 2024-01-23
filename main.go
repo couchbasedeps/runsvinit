@@ -107,7 +107,7 @@ func shutdown(sv string, s signaler) {
 			continue
 		}
 		service := filepath.Base(match)
-		stop := cmd(sv, "down", service)
+		stop := cmd(sv, "-w", "99", "down", service)
 		debugf("stopping %s...", service)
 		wg.Add(1)
 		go func() {
